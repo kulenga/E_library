@@ -1,0 +1,314 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Tableau de Bord — E-Library{% endblock %}
+
+{% block content %}
+<div class="mb-8 bg-white rounded-2xl shadow-sm border border-gray-200/80 p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-300 hover:shadow-md hover:border-gray-300">
+    <div class="flex items-center gap-4 w-full sm:w-auto">
+        <div class="bg-indigo-600 text-white font-bold w-12 h-12 rounded-xl flex items-center justify-center uppercase tracking-wide shadow-sm shadow-indigo-100 text-lg transition-transform hover:rotate-3">
+            {{ profile.user.username|slice:":2" }}
+        </div>
+        <div>
+            <div class="flex items-center gap-2">
+                <h2 class="text-base font-extrabold text-gray-900">Portail de {{ profile.user.username }}</h2>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">Étudiant</span>
+            </div>
+            <p class="text-xs text-gray-500 font-medium mt-0.5 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+                {{ profile.filiere.nom }} <span class="text-gray-300">•</span> Promotion {{ profile.promotion }}
+            </p>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end border-t pt-3 sm:border-t-0 sm:pt-0 border-gray-100">
+        <a href="{% url 'voir_programme' %}?filiere={{ profile.filiere.id }}&promotion={{ profile.promotion }}" class="px-4 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all duration-200 border border-emerald-100 flex items-center gap-1.5 shadow-sm">
+            📋 Mon Programme
+        </a>
+
+        <a href="{% url 'home_publique' %}" class="px-4 py-2.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all duration-200 border border-indigo-100 flex items-center gap-1.5 group">
+            <svg class="w-4 h-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l-7-7m7 7h18"></path>
+            </svg>
+            Catalogue public
+        </a>
+
+        <a href="{% url 'gestion_salons' %}" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+            </svg>
+            Salons d'études
+        </a>
+
+        <form action="{% url 'deconnexion' %}" method="POST" class="inline m-0 w-full sm:w-auto">
+            {% csrf_token %}
+            <button type="submit" class="w-full sm:w-auto px-4 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center gap-1.5 group cursor-pointer">
+                <svg class="w-4 h-4 opacity-80 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                Déconnexion
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <div class="lg:col-span-2 space-y-6">
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 transition-all duration-300 hover:shadow-md">
+            <h1 class="text-xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+                <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                Que recherchez-vous aujourd'hui ?
+            </h1>
+            <p class="text-xs md:text-sm text-gray-500 mt-1.5 mb-5 leading-relaxed">Explorez instantanément les ressources locales de votre promotion ou interrogez l'assistant pédagogique par IA et le réseau universitaire mondial en cas de besoin.</p>
+
+            <form method="GET" action="{% url 'dashboard' %}" class="flex flex-col sm:flex-row gap-2.5">
+                <div class="relative flex-grow">
+                    <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Ex: Résistance des matériaux, Algorithmique, Béton armé..."
+                           class="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm outline-none transition-all duration-200 shadow-inner bg-gray-50/50 focus:bg-white text-gray-800 font-medium">
+                </div>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition-all duration-200 shadow-sm flex items-center justify-center gap-2 flex-shrink-0 cursor-pointer">
+                    <span>Lancer la recherche</span>
+                </button>
+            </form>
+
+            {% if recherche_active %}
+                <div class="mt-4 flex items-center justify-between text-xs bg-gray-50 border border-gray-100 p-3 rounded-xl">
+                    <span class="text-gray-600 font-medium">Index de recherche : <strong class="text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded ml-1">"{{ query }}"</strong></span>
+                    <a href="{% url 'dashboard' %}" class="text-gray-400 hover:text-red-600 font-bold transition-colors flex items-center gap-1 hover:no-underline">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Réinitialiser
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if recherche_active %}
+            <div class="space-y-5">
+                <h2 class="text-sm font-extrabold uppercase tracking-widest text-gray-400 flex items-center gap-2 border-b border-gray-100 pb-2">
+                    <span>Analyse des correspondances</span>
+                </h2>
+
+                {% if explication_internet %}
+                    <div class="bg-gradient-to-br from-indigo-50/60 to-slate-50 border border-indigo-100 rounded-2xl p-6 shadow-sm space-y-4">
+                        <div class="flex items-center gap-3 border-b border-indigo-100 pb-3">
+                            <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-md">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-extrabold text-slate-900">Synthèse Générative & Exercices d'IA</h3>
+                                <p class="text-[11px] text-indigo-600 font-medium">Fiche récapitulative et cas pratiques résolus</p>
+                            </div>
+                        </div>
+
+                        <div class="text-sm text-gray-700 leading-relaxed space-y-3 prose max-w-none">
+                            {{ explication_internet|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if supports_locaux %}
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-emerald-700 bg-emerald-50/80 border border-emerald-100 px-3 py-1.5 rounded-xl inline-flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Ressources intranet trouvées ({{ supports_locaux.count }})
+                        </div>
+                        <div class="grid grid-cols-1 gap-3">
+                            {% for support in supports_locaux %}
+                                <div class="bg-white border-l-4 border-emerald-500 rounded-r-2xl shadow-sm border-y border-r border-gray-200/80 p-5 transition-all duration-200 hover:shadow-md hover:translate-x-0.5">
+                                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                        {{ support.cours.intitule }}
+                                    </span>
+                                    <h3 class="text-base font-extrabold text-gray-900 mt-2.5">{{ support.titre }}</h3>
+
+                                    {% if support.exemples %}
+                                        <div class="text-xs text-gray-600 mt-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                            <strong class="text-gray-800 block mb-0.5">Fiches d'exemples :</strong>
+                                            {{ support.exemples }}
+                                        </div>
+                                    {% endif %}
+                                    {% if support.exercices %}
+                                        <p class="text-xs text-gray-600 mt-2 pl-3 border-l-2 border-gray-200">
+                                            <strong>Travaux pratiques :</strong> {{ support.exercices }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if supports_internet %}
+                    <div class="space-y-3 pt-2">
+                        <div class="text-xs font-bold text-indigo-700 bg-indigo-50/80 border border-indigo-100 px-3 py-1.5 rounded-xl inline-flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                            </svg>
+                            Ouvrages & PDF complémentaires (Moteur externe)
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-3">
+                            {% for res in supports_internet %}
+                                <a href="{{ res.lien }}" target="_blank" rel="noopener noreferrer" class="block bg-white rounded-2xl p-4.5 shadow-sm border border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all duration-200 group">
+                                    <h4 class="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors flex items-center justify-between gap-4">
+                                        <span class="line-clamp-1">{{ res.titre }}</span>
+                                        <span class="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded-lg opacity-90 sm:opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center gap-0.5 whitespace-nowrap">
+                                            Ouvrir <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                        </span>
+                                    </h4>
+                                    <p class="text-xs text-gray-500 mt-1.5 leading-relaxed line-clamp-2">{{ res.description }}</p>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if suggestions_similaires %}
+                    <div class="bg-amber-50/60 border border-amber-200 rounded-2xl p-5 space-y-3.5 shadow-sm">
+                        <div class="text-amber-900 text-sm">
+                            <p class="font-extrabold flex items-center gap-2">
+                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                Aucun résultat strict trouvé pour "{{ query }}"
+                            </p>
+                            <p class="text-xs text-amber-700 font-medium mt-0.5">Voici des thématiques connexes ou orthographes approchantes répertoriées :</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {% for sup in suggestions_similaires %}
+                                <a href="?q={{ sup.titre }}" class="block bg-white p-3.5 rounded-xl border border-amber-200/60 hover:border-amber-400 text-xs font-bold text-gray-800 transition-all duration-150 hover:shadow-sm">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="truncate">{{ sup.titre }}</span>
+                                        <span class="text-[10px] text-gray-400 font-semibold bg-gray-100 px-1.5 py-0.5 rounded-md whitespace-nowrap"># {{ sup.cours.intitule }}</span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if not supports_locaux and not supports_internet and not explication_internet and not suggestions_similaires %}
+                    <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
+                        <div class="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-800">Aucun résultat trouvé</h3>
+                        <p class="text-xs text-gray-400 max-w-sm mx-auto mt-1 leading-relaxed">Nous n'avons trouvé aucune ressource interne ou externe correspondant à ce terme. Modifiez vos mots-clés.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <div class="space-y-4">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5 pl-0.5">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    Supports de cours fondamentaux ({{ profile.filiere.nom }})
+                </h2>
+
+                {% if supports_locaux %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% for support in supports_locaux %}
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-200/90 p-5 hover:shadow-md hover:border-gray-300 transition-all duration-200 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 inline-block">
+                                        {{ support.cours.intitule }}
+                                    </span>
+                                    <h3 class="text-base font-extrabold text-gray-900 mt-2.5 leading-snug">{{ support.titre }}</h3>
+                                    {% if support.exemples %}
+                                        <p class="text-xs text-gray-500 mt-2 border-t border-gray-50 pt-2.5 leading-relaxed line-clamp-3">
+                                            <strong class="text-gray-700 font-semibold">Focus :</strong> {{ support.exemples }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-xs text-gray-400 shadow-inner">
+                        Aucun document pédagogique officiel n'est actuellement indexé pour votre promotion.
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="space-y-6">
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition-all duration-300 hover:shadow-md">
+            <h2 class="text-sm font-extrabold text-gray-900 flex items-center gap-2 mb-4">
+                <div class="p-1 bg-indigo-50 text-indigo-600 rounded-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </div>
+                Partager une ressource
+            </h2>
+            <form method="POST" class="space-y-3.5">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Titre du support</label>
+                    <input type="text" name="titre" required placeholder="Ex: Annales corrigées Béton Armé"
+                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-gray-50 focus:bg-white text-gray-800 font-medium">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">URL externe ou Note textuelle</label>
+                    <textarea name="description_ou_lien" rows="3" required placeholder="Collez un lien Drive/GitHub ou décrivez brièvement le support..."
+                              class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-gray-50 focus:bg-white text-gray-800 font-medium"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm transition-all duration-200 shadow-sm shadow-indigo-100 cursor-pointer">
+                    Diffuser à la promotion
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-3">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5 pl-0.5">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+                </svg>
+                Fil d'actualité collaboratif
+            </h2>
+
+            {% if references_filiere %}
+                <div class="space-y-3 max-h-[580px] overflow-y-auto pr-1 custom-scrollbar">
+                    {% for ref in references_filiere %}
+                        <div class="bg-white rounded-2xl p-4.5 shadow-sm border border-gray-200/90 space-y-2.5 border-l-4 border-indigo-600 transition-all duration-200 hover:shadow-md">
+                            <div class="flex items-center justify-between text-[11px] text-gray-400 font-medium">
+                                <span class="font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    {{ ref.etudiant.username }}
+                                </span>
+                                <span class="text-gray-400">{{ ref.date_publication|date:"d M, H:i" }}</span>
+                            </div>
+                            <h4 class="font-extrabold text-xs md:text-sm text-gray-900 leading-snug">{{ ref.titre }}</h4>
+                            <p class="text-xs text-gray-600 bg-gray-50/70 rounded-xl p-3.5 whitespace-pre-line leading-relaxed border border-gray-100/60 break-words font-medium">
+                                {{ ref.description_ou_lien|urlize }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-gray-50 rounded-2xl p-6 text-center text-xs text-gray-400 border border-dashed border-gray-300 shadow-inner">
+                    Aucune publication partagée pour le moment. Soyez le premier contribueteur !
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

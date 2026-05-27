@@ -1,0 +1,118 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ salon.nom }} — E-Library{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-4">
+    <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm flex items-center justify-between">
+        <div>
+            <h1 class="text-lg font-extrabold text-gray-900">Salon : {{ salon.nom }}</h1>
+            <p class="text-xs text-gray-500 font-medium">Créé par {{ salon.createur.username }} • {{ salon.membres.count }} membres</p>
+        </div>
+        <a href="{% url 'gestion_salons' %}" class="px-3.5 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+            Retour aux salons
+        </a>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[550px] overflow-hidden">
+        <div id="chat-box" class="flex-grow p-5 overflow-y-auto space-y-4 bg-gray-50/50 scroll-smooth">
+            <div class="flex items-center justify-center h-full">
+                <p class="text-xs font-medium text-gray-400 animate-pulse">Chargement de la discussion...</p>
+            </div>
+        </div>
+
+        <form id="chat-form" class="p-4 border-t border-gray-100 bg-white flex gap-2">
+            {% csrf_token %}
+            <input type="text" id="chat-input" placeholder="Écrivez votre message de cours ici..." required autocomplete="off" max="2000"
+                   class="flex-grow px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 rounded-xl text-sm transition shadow-sm active:scale-95">
+                Envoyer
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById('chat-box');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const apiUrl = "{% url 'api_messages' salon.id %}";
+
+    // Fonction de sécurité indispensable contre l'injection de scripts (XSS)
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g,
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    // Charger et injecter les messages depuis l'API Django
+    async function chargerMessages(forcerScroll = false) {
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error("Erreur HTTP");
+            const data = await response.json();
+
+            // Calculer si l'utilisateur est calé en bas du tchat (marge de 120px tolérée)
+            const evaluationBas = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 120;
+
+            if (data.messages.length === 0) {
+                chatBox.innerHTML = `
+                    <div class="flex items-center justify-center h-full">
+                        <p class="text-xs font-medium text-gray-400">Aucun message dans ce salon. Lancez la discussion !</p>
+                    </div>`;
+                return;
+            }
+
+            chatBox.innerHTML = data.messages.map(msg => `
+                <div class="flex flex-col ${msg.est_me ? 'items-end' : 'items-start'}">
+                    <span class="text-[10px] text-gray-400 font-bold mb-0.5 px-1">${escapeHTML(msg.auteur)}</span>
+                    <div class="max-w-md px-4 py-2.5 rounded-2xl text-xs font-medium shadow-sm break-words
+                        ${msg.est_me ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-200/80'}">
+                        ${escapeHTML(msg.texte)}
+                        <span class="block text-[9px] text-right mt-1 opacity-70">${msg.date}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Faire défiler automatiquement vers le bas si requis ou si déjà en bas
+            if (forcerScroll || evaluationBas) {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        } catch (e) {
+            console.error("Erreur lors de la synchronisation en tâche de fond.");
+        }
+    }
+
+    // Capture et envoi asynchrone des messages
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const texte = chatInput.value.trim(); // JavaScript n'accepte pas .strip()
+        if (!texte) return;
+
+        const formData = new FormData();
+        formData.append('texte', texte);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        // Effacer instantanément le champ pour donner une sensation de vitesse à l'étudiant
+        chatInput.value = '';
+
+        try {
+            const response = await fetch(apiUrl, { method: 'POST', body: formData });
+            if (!response.ok) throw new Error("Échec de l'envoi");
+
+            // Recharger le tchat immédiatement et forcer le scroll vers le bas
+            await chargerMessages(true);
+        } catch (e) {
+            alert("Erreur système : Impossible d'envoyer votre message pour le moment.");
+        }
+    });
+
+    // Écouteur de boucle : Rafraîchir de manière transparente toutes les 3 secondes
+    setInterval(() => chargerMessages(false), 3000);
+
+    // Initialisation immédiate au chargement de la page
+    document.addEventListener("DOMContentLoaded", () => {
+        chargerMessages(true);
+    });
+</script>
+{% endblock %}

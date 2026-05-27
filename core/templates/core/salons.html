@@ -1,0 +1,120 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Gestion des Salons — E-Library{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-extrabold text-gray-900">Salons d'Études Privés</h1>
+            <p class="text-xs text-gray-500 font-medium">Collaborez en temps réel avec les camarades de votre promotion.</p>
+        </div>
+        
+        <form method="POST" class="flex gap-2 items-center">
+            {% csrf_token %}
+            <input type="text" name="nom_salon" placeholder="Nom du nouveau salon..." required max_length="100"
+                   class="px-3.5 py-2 text-xs font-medium border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition w-full sm:w-64">
+            <button type="submit" name="creer_salon" class="whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-sm active:scale-95">
+                Créer un salon
+            </button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-2 space-y-4">
+            <h2 class="text-sm font-extrabold text-gray-800 tracking-wider uppercase px-1">Mes espaces de discussion</h2>
+            
+            {% if mes_salons %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for salon in mes_salons %}
+                        <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm flex flex-col justify-between space-y-4 hover:border-gray-300 transition">
+                            <div>
+                                <div class="flex items-start justify-between">
+                                    <h3 class="font-bold text-gray-900 text-sm break-words max-w-[80%]">{{ salon.nom }}</h3>
+                                    <span class="text-[10px] bg-gray-100 text-gray-600 font-bold px-2 py-0.5 rounded-full">
+                                        {{ salon.membres.count }} memb.
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-gray-400 mt-1">Créateur : <span class="font-semibold text-gray-600">{{ salon.createur.username }}</span></p>
+                            </div>
+
+                            {% if salon.createur_id == request.user.id %}
+                                <div class="border-t border-gray-50 pt-3">
+                                    {% if salon.camarades_invitables %}
+                                        <form action="{% url 'envoyer_invitation' salon.id %}" method="POST" class="flex gap-1.5 items-center">
+                                            {% csrf_token %}
+                                            <select name="invite_id" required class="flex-grow px-2 py-1.5 text-[11px] font-medium border border-gray-200 bg-gray-50 rounded-lg outline-none focus:border-indigo-500 transition">
+                                                <option value="" disabled selected hidden>Inviter un camarade...</option>
+                                                {% for camarade in salon.camarades_invitables %}
+                                                    <option value="{{ camarade.id }}">{{ camarade.username }} ({{ camarade.first_name }} {{ camarade.last_name }})</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="bg-gray-900 hover:bg-black text-white p-1.5 rounded-lg text-xs transition shadow-xs active:scale-95" title="Envoyer l'invitation">
+                                                ➕
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <p class="text-[10px] text-gray-400 font-medium text-center bg-gray-50/50 py-1 rounded-lg">Tous vos camarades de promo sont invités !</p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <a href="{% url 'voir_salon' salon.id %}" class="w-full block text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl text-xs transition">
+                                Entrer dans la discussion &rarr;
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white rounded-2xl p-8 border border-gray-200 text-center shadow-sm">
+                    <p class="text-xs font-semibold text-gray-400">Vous ne faites partie d'aucun salon pour le moment.</p>
+                    <p class="text-[11px] text-gray-400 mt-1">Créez-en un en haut à droite ou attendez l'invitation d'un camarade de promo !</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-sm font-extrabold text-gray-800 tracking-wider uppercase px-1">Invitations en attente</h2>
+            
+            {% if invitations_recues %}
+                <div class="space-y-3">
+                    {% for invitation in invitations_recues %}
+                        <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-3">
+                            <div>
+                                <p class="text-xs font-bold text-gray-900">
+                                    <span class="text-indigo-600">@{{ invitation.hote.username }}</span> vous invite à rejoindre :
+                                </p>
+                                <p class="text-xs text-gray-700 font-semibold italic mt-1 bg-gray-50 p-2 rounded-lg border border-gray-100 break-words">
+                                    "{{ invitation.salon.nom }}"
+                                </p>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <form action="{% url 'repondre_invitation' invitation.id 'accepter' %}" method="POST" class="flex-1">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded-lg text-[11px] transition shadow-xs">
+                                        Accepter
+                                    </button>
+                                </form>
+                                <form action="{% url 'repondre_invitation' invitation.id 'refuser' %}" method="POST" class="flex-1">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-1.5 rounded-lg text-[11px] transition">
+                                        Décliner
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-6 text-center">
+                    <p class="text-xs font-medium text-gray-400">Aucune invitation reçue pour l'instant.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

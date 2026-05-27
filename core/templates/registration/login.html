@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion - E-Library</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .login-container { background: #ffffff; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 100%; max-width: 450px; box-sizing: border-box; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; font-size: 0.9em; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #34495e; font-size: 0.9em; }
+
+        /* Style des champs générés par Django */
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 100%;
+        }
+        .login-container input:focus { border-color: #3498db; outline: none; }
+
+        .btn-submit { width: 100%; background: #3498db; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .btn-submit:hover { background: #2980b9; }
+
+        .alert-error { background: #fdf2f2; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 20px; color: #e74c3c; font-size: 0.9em; border-radius: 0 5px 5px 0; }
+        .alert-error ul { list-style: none; padding: 0; margin: 0; }
+
+        .footer-link { text-align: center; margin-top: 20px; font-size: 0.9em; color: #7f8c8d; }
+        .footer-link a { color: #3498db; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Connexion</h2>
+    <p class="subtitle">Accédez à votre espace de lecture E-Library</p>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Erreur si les identifiants ne sont pas valides -->
+        {% if form.errors %}
+            <div class="alert-error">
+                <ul>
+                    <li>Nom d'utilisateur ou mot de passe incorrect.</li>
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Identifiant -->
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Nom d'utilisateur</label>
+            {{ form.username }}
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Mot de passe</label>
+            {{ form.password }}
+        </div>
+
+        <button type="submit" class="btn-submit">Se connecter</button>
+    </form>
+
+    <div class="footer-link">
+        Pas encore de compte ? <a href="{% url 'inscription' %}">Inscrivez-vous ici</a>
+    </div>
+</div>
+
+</body>
+</html>

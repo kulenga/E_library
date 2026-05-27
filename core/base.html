@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-Library{% endblock %}</title>
+    <!-- Chargement de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col h-full text-gray-800">
+
+    <!-- Barre de Navigation -->
+    <nav class="bg-indigo-700 shadow-lg text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-6">
+                    <span class="font-bold text-xl tracking-wider">E-LIBRARY</span>
+                    {% if user.is_authenticated %}
+                    <div class="hidden md:flex items-center gap-4 text-sm font-medium">
+                        <a href="{% url 'dashboard' %}" class="hover:text-indigo-200 transition">Tableau de bord</a>
+                        <a href="{% url 'gestion_salons' %}" class="hover:text-indigo-200 transition">Salons d'étude</a>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-4 text-sm">
+                    {% if user.is_authenticated %}
+                        <span class="bg-indigo-800 px-3 py-1.5 rounded-md text-indigo-100 font-mono text-xs">
+                            {{ user.profile.filiere }} — {{ user.profile.promotion }}
+                        </span>
+                        <span class="font-medium text-indigo-100">Bonjour, {{ user.username }}</span>
+                        <!-- Un formulaire classique ou lien vers ta déconnexion -->
+                        <a href="/logout/" class="bg-indigo-600 hover:bg-indigo-800 px-3 py-1.5 rounded-md transition text-xs font-semibold">Déconnexion</a>
+                    {% else %}
+                        <a href="{% url 'inscription' %}" class="bg-white text-indigo-700 hover:bg-indigo-50 px-4 py-2 rounded-md font-semibold transition">S'inscrire</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Pied de page -->
+    <footer class="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-500">
+        <p>&copy; 2026 E-library — Ingénierie & Architecture</p>
+    </footer>
+
+</body>
+</html>

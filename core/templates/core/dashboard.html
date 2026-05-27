@@ -1,0 +1,238 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Tableau de bord — E-Library{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- En-tête de bienvenue personnalisé -->
+    <div class="bg-gradient-to-r from-indigo-950 to-slate-800 rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="space-y-1">
+            <h1 class="text-xl font-extrabold tracking-wide">E-Library Espace d'Études 🎓</h1>
+            <p class="text-xs text-indigo-200 font-medium">
+                Content de vous revoir, <span class="font-bold text-white">@{{ profile.user.username }}</span>. Accédez à vos ressources pédagogiques exclusives.
+            </p>
+
+
+            <div class="container mx-auto px-4">
+    <h1 class="text-2xl font-bold">Tableau de bord</h1>
+
+    {% if user.is_staff %}
+    <div class="bg-indigo-900 border-l-4 border-indigo-500 p-4 rounded-lg my-6">
+        <h4 class="text-white font-bold text-sm">Zone Administrateur</h4>
+        <p class="text-indigo-200 text-xs mb-3">Gérer la base de données pédagogique.</p>
+        <a href="{% url 'initialiser_les_cours' %}"
+           class="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-lg text-xs font-bold transition">
+           Synchroniser les programmes
+        </a>
+    </div>
+    {% endif %}
+
+    </div>
+
+            <!-- Boutons d'accès rapide -->
+            <a href="{% url 'voir_catalogue_complet' %}"
+   class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition border border-emerald-400 active:scale-95">
+   📖 Voir tout le catalogue
+</a>
+            <div class="pt-2 flex gap-2">
+                <a href="{% url 'voir_programme' %}?filiere={{ profile.filiere.id }}&promotion={{ profile.promotion }}"
+                   class="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition border border-white/10 active:scale-95">
+                    📋 Consulter mon programme complet
+                </a>
+
+                <!-- Bouton À propos intégré ici -->
+                <button onclick="toggleModal()" class="inline-flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition border border-indigo-400 active:scale-95">
+                    ℹ️ À propos
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 self-start md:self-center">
+            <span class="bg-indigo-500/20 text-indigo-100 font-bold px-3 py-1 rounded-xl text-xs border border-indigo-500/30 backdrop-blur-sm">
+                Filière : {{ profile.filiere.nom }}
+            </span>
+            <span class="bg-emerald-500/20 text-emerald-300 font-bold px-3 py-1 rounded-xl text-xs border border-emerald-500/30 backdrop-blur-sm">
+                Niveau : {{ profile.promotion }}
+            </span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Colonne principale -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- Barre de Recherche Hybride -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm space-y-4">
+                <div>
+                    <h3 class="text-sm font-extrabold text-gray-900 tracking-wide">Moteur de recherche hybride</h3>
+                    <p class="text-[11px] text-gray-400 mt-0.5">Explorez instantanément l'intranet local, les documents PDF du Web et l'assistant IA de l'établissement.</p>
+                </div>
+
+                <form method="GET" action="{% url 'dashboard' %}" class="flex gap-2">
+                    <input type="text" name="q" value="{{ query|default:'' }}" required autocomplete="off"
+                           placeholder="Ex: Béton armé, Algorithmique, Thermodynamique..."
+                           class="flex-grow px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition">
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 rounded-xl text-xs transition shadow-sm active:scale-95">
+                        Rechercher
+                    </button>
+                    {% if recherche_active %}
+                        <a href="{% url 'dashboard' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center justify-center">
+                            Effacer
+                        </a>
+                    {% endif %}
+                </form>
+            </div>
+
+            {% if recherche_active %}
+                <div class="bg-indigo-50 border-l-4 border-indigo-600 p-3.5 rounded-r-xl text-xs text-indigo-900 font-medium">
+                    🔍 Résultats pour "<strong>{{ query }}</strong>" configurés pour la promotion <span class="font-bold">{{ profile.promotion }}</span> :
+                </div>
+            {% endif %}
+
+            <!-- Supports de cours locaux -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-extrabold text-gray-800 tracking-wider uppercase px-1">📚 Supports de cours de votre promotion</h3>
+
+                {% if supports_locaux %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% for support in supports_locaux %}
+                            <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm flex flex-col justify-between space-y-4 hover:border-gray-300 transition">
+                                <div class="space-y-1">
+                                    <h4 class="font-bold text-gray-900 text-sm break-words">{{ support.titre }}</h4>
+                                    <p class="text-[11px] text-gray-500 font-medium">Cours : <span class="text-indigo-600 font-semibold">{{ support.cours.intitule }}</span></p>
+                                </div>
+                                <a href="{{ support.fichier.url }}" download class="w-full text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl text-xs transition shadow-2xs">
+                                    Télécharger le document
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-white rounded-2xl p-6 border border-gray-200 text-center shadow-sm">
+                        {% if recherche_active %}
+                            <p class="text-xs font-semibold text-gray-400">❌ Aucun support de cours interne trouvé pour "<strong>{{ query }}</strong>".</p>
+                        {% else %}
+                            <p class="text-xs font-semibold text-gray-400">Aucun fichier n'a encore été téléversé pour votre promotion.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Blocs Assistant IA & Web Externes -->
+            {% if recherche_active and supports_internet or explication_internet %}
+                <div class="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-5 space-y-5">
+                    <div class="border-b border-emerald-100 pb-2">
+                        <h3 class="text-sm font-extrabold text-emerald-950 tracking-wide flex items-center gap-1.5">
+                            <span>🤖</span> Assistant IA & Ressources Complémentaires du Web
+                        </h3>
+                    </div>
+
+                    {% if explication_internet %}
+                        <div class="bg-white rounded-xl p-4 border border-emerald-100 text-xs text-gray-700 leading-relaxed space-y-2 shadow-2xs">
+                            {{ explication_internet|safe }}
+                        </div>
+                    {% endif %}
+
+                    {% if supports_internet %}
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-extrabold text-emerald-900 tracking-wide px-1">📄 Documents PDF externes recommandés :</h4>
+                            <div class="space-y-2">
+                                {% for res in supports_internet %}
+                                    <div class="bg-white rounded-xl p-3.5 border border-gray-100 shadow-2xs hover:border-emerald-300 transition">
+                                        <h5 class="font-bold text-xs text-gray-900">
+                                            <a href="{{ res.lien }}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 hover:underline break-words">{{ res.titre }}</a>
+                                        </h5>
+                                        <p class="text-[11px] text-gray-500 mt-1 line-clamp-2 leading-normal">{{ res.description }}</p>
+                                        <div class="mt-2 flex items-center text-[9px] text-emerald-600 font-bold tracking-wide uppercase">
+                                            <span class="bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">🎓 Source Universitaire</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <!-- Suggestions de correction lexicale -->
+            {% if recherche_active and suggestions_similaires %}
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2 text-xs text-amber-900">
+                    <p class="font-bold">💡 Vous vouliez peut-être dire :</p>
+                    <ul class="list-disc list-inside space-y-1 font-medium">
+                        {% for sug in suggestions_similaires %}
+                            <li>
+                                <a href="{% url 'dashboard' %}?q={{ sug.titre }}" class="underline hover:text-amber-700 font-bold">{{ sug.titre }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="space-y-6">
+            <!-- Salons -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold text-gray-900 tracking-wide">💬 Salons d'études</h3>
+                <p class="text-[11px] text-gray-400 mt-0.5">Discutez en temps réel avec vos camarades.</p>
+                <a href="{% url 'gestion_salons' %}" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs transition active:scale-95">
+                    Gérer mes salons
+                </a>
+            </div>
+
+            <!-- Partage -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm space-y-4">
+                <div>
+                    <h3 class="text-sm font-extrabold text-gray-900 tracking-wide">💬 Espace Partage & Entraide</h3>
+                    <p class="text-[11px] text-gray-400 mt-0.5">Mettez à disposition de vos camarades des fiches de révision.</p>
+                </div>
+                <form method="POST" action="{% url 'dashboard' %}" class="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    {% csrf_token %}
+                    <input type="text" name="titre" placeholder="Titre..." required class="w-full px-3 py-2 text-xs font-medium border border-gray-200 bg-white rounded-lg outline-none">
+                    <textarea name="description_ou_lien" placeholder="Lien ou explications..." required class="w-full px-3 py-2 text-xs font-medium border border-gray-200 bg-white rounded-lg outline-none h-20 resize-none"></textarea>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition">Publier</button>
+                </form>
+            </div>
+
+            <!-- Fil d'actualité -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-extrabold text-gray-800 tracking-wider uppercase px-1">Fil d'actualité</h3>
+                {% for ref in references_filiere %}
+                    <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-2">
+                        <div class="text-[10px] text-gray-400 font-bold flex justify-between">
+                            <span>@{{ ref.etudiant.username }}</span>
+                            <span>{{ ref.date_publication|date:"d M H:i" }}</span>
+                        </div>
+                        <h4 class="font-bold text-xs">{{ ref.titre }}</h4>
+                        <div class="text-xs text-gray-600 break-all">{{ ref.description_ou_lien|urlize }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modale À propos -->
+<div id="aboutModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-8 shadow-2xl space-y-6">
+        <h2 class="text-xl font-extrabold text-indigo-950">E-Library : L'intelligence au service de la réussite.</h2>
+        <div class="text-xs text-gray-600 leading-relaxed space-y-4">
+            <p>E-Library est une plateforme Web robuste, développée sous Django, pensée pour optimiser le temps d'étude des étudiants.</p>
+            <ul class="space-y-3 font-medium">
+                <li><span class="text-indigo-600 font-bold">●</span> <strong>Recherche centralisée :</strong> Index unifié croisant documents internes et sources externes via l'IA.</li>
+                <li><span class="text-emerald-600 font-bold">●</span> <strong>Collaboration :</strong> Fil d'actualité et salons d'études pour l'apprentissage social.</li>
+                <li><span class="text-amber-600 font-bold">●</span> <strong>Architecture optimisée :</strong> Gestion fine des profils par filière et promotion.</li>
+            </ul>
+        </div>
+        <button onclick="toggleModal()" class="w-full bg-gray-900 text-white py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition">Fermer</button>
+    </div>
+</div>
+
+<script>
+    function toggleModal() {
+        document.getElementById('aboutModal').classList.toggle('hidden');
+    }
+</script>
+{% endblock %}

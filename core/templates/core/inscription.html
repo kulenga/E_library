@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription - E-Library</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .register-container { background: #ffffff; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; font-size: 0.9em; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #34495e; font-size: 0.9em; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 100%; }
+        .form-control:focus { border-color: #3498db; outline: none; }
+        .btn-submit { width: 100%; background: #3498db; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .btn-submit:hover { background: #2980b9; }
+
+        /* Optimisation du style des erreurs globales et locales */
+        .alert-error { background: #fdf2f2; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 20px; color: #e74c3c; font-size: 0.9em; border-radius: 0 5px 5px 0; }
+        .alert-error ul, .error-text ul { list-style: none; padding: 0; margin: 0; }
+
+        .error-text { color: #e74c3c; margin-top: 5px; font-size: 0.85em; }
+
+        .footer-link { text-align: center; margin-top: 20px; font-size: 0.9em; color: #7f8c8d; }
+        .footer-link a { color: #3498db; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <h2>Créer un compte</h2>
+    <p class="subtitle">Rejoignez la bibliothèque numérique de votre établissement</p>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Affichage des erreurs globales (Mots de passe différents) -->
+        {% if form.non_field_errors %}
+            <div class="alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <!-- Génération automatique des champs stylisés -->
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+
+                <!-- Affichage des erreurs du champ (Email déjà pris, etc.) -->
+                {% if field.errors %}
+                    <div class="error-text">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="btn-submit">S'inscrire et se connecter</button>
+    </form>
+
+    <div class="footer-link">
+        Déjà inscrit ? <a href="{% url 'login' %}">Connectez-vous ici</a>
+    </div>
+</div>
+
+</body>
+</html>

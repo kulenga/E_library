@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord - E-Library</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 0; }
+        .navbar { background: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar h1 { margin: 0; font-size: 1.5em; }
+        .nav-links a { color: #f4f6f9; text-decoration: none; margin-left: 20px; font-weight: 500; }
+        .nav-links a:hover { color: #3498db; }
+
+        .main-container { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+
+        /* Composants des blocs */
+        .card { background: white; border-radius: 8px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        h2 { color: #2c3e50; margin-top: 0; border-bottom: 2px solid #f4f6f9; padding-bottom: 10px; }
+
+        /* Barre de recherche */
+        .search-box { display: flex; gap: 10px; margin-bottom: 30px; }
+        .search-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em; }
+        .search-input:focus { border-color: #3498db; outline: none; }
+        .btn { background: #3498db; color: white; border: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: background 0.2s; text-decoration: none; display: inline-block; }
+        .btn:hover { background: #2980b9; }
+        .btn-success { background: #2ecc71; }
+        .btn-success:hover { background: #27ae60; }
+
+        /* Grille de cours */
+        .grid-supports { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .support-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; background: #fafbfc; }
+        .support-card h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 1.1em; }
+        .badge { display: inline-block; background: #e1f5fe; color: #0288d1; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; font-weight: 600; margin-bottom: 10px; }
+
+        /* Alertes et notifications d'IA / Internet */
+        .alert-info { background: #ebf5fb; border-left: 4px solid #3498db; padding: 15px; border-radius: 0 6px 6px 0; margin-bottom: 20px; }
+        .alert-warning { background: #fef9e7; border-left: 4px solid #f39c12; padding: 15px; border-radius: 0 6px 6px 0; margin-bottom: 20px; }
+
+        /* Formulaires */
+        .form-control { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .reference-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .reference-item:last-child { border-bottom: none; }
+        .meta-text { font-size: 0.85em; color: #7f8c8d; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <!-- Barre de Navigation -->
+    <div class="navbar">
+        <h1>E-Library — Tableau de Bord</h1>
+        <div class="nav-links">
+            <span>Bienvenue, <strong>{{ request.user.username }}</strong> ({{ profile.filiere.nom }} - {{ profile.promotion }})</span>
+            <a href="{% url 'gestion_salons' %}">💬 Salons d'étude</a>
+            <a href="{% url 'logout' %}" style="color: #e74c3c;">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+
+        <!-- SECTION GAUCHE : Recherche et Supports de Cours -->
+        <div>
+            <!-- Formulaire de recherche -->
+            <form method="GET" action="{% url 'dashboard' %}" class="search-box">
+                <input type="text" name="q" value="{{ query }}" placeholder="Rechercher un cours, une matière, un exemple..." class="search-input">
+                <button type="submit" class="btn">Rechercher</button>
+                {% if recherche_active %}
+                    <a href="{% url 'dashboard' %}" class="btn" style="background-color: #95a5a6;">Réinitialiser</a>
+                {% endif %}
+            </form>
+
+            <!-- Cas 1 : Suggestions de correction orthographique (Niveau 3 de votre vue) -->
+            {% if suggestions_similaires %}
+                <div class="alert-warning">
+                    <strong>Aucun résultat exact trouvé.</strong> Écriviez-vous plutôt l'un de ces cours ?
+                    <ul>
+                        {% for suggestion in suggestions_similaires %}
+                            <li><a href="{% url 'dashboard' %}?q={{ suggestion.titre }}">{{ suggestion.titre }}</a> (Matière : {{ suggestion.matiere }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- Cas 2 : Explication synthétique extraite d'Internet (Niveau 2 de votre vue) -->
+            {% if explication_internet %}
+                <div class="alert-info">
+                    <h3>💡 Encyclopédie Numérique (Synthèse Web)</h3>
+                    <p>{{ explication_internet }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Liste principale des supports de cours -->
+            <div class="card">
+                <h2>📚 Supports de cours académiques</h2>
+
+                {% if supports_locaux %}
+                    <div class="grid-supports">
+                        {% for support in supports_locaux %}
+                            <div class="support-card">
+                                <span class="badge">{{ support.matiere }}</span>
+                                <h3>{{ support.titre }}</h3>
+                                <p style="font-size: 0.9em; color: #555;">{{ support.description|truncatewords:20 }}</p>
+
+                                {% if support.document_pdf %}
+                                    <a href="{{ support.document_pdf.url }}" target="_blank" class="btn btn-success" style="padding: 6px 12px; font-size: 0.85em;">📥 Ouvrir le PDF</a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {% if not supports_internet %}
+                        <p style="color: #7f8c8d; text-align: center;">Aucun document disponible pour votre promotion pour le moment.</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Cas 3 : Webographie externe (Résultats PDF DuckDuckGo) -->
+            {% if supports_internet %}
+                <div class="card" style="border-top: 4px solid #2ecc71;">
+                    <h2>🌐 Extensions de recherche académique (PDF Externes)</h2>
+                    <p style="font-size: 0.9em; color: #7f8c8d; margin-bottom: 20px;">Ces documents proviennent d'universités francophones via une recherche sécurisée.</p>
+                    <div class="grid-supports">
+                        {% for res in supports_internet %}
+                            <div class="support-card" style="background: #fbfcfc;">
+                                <span class="badge" style="background: #e8f8f5; color: #117a65;">PDF Externe</span>
+                                <h3>{{ res.titre }}</h3>
+                                <p style="font-size: 0.9em; color: #555;">{{ res.description|truncatewords:25 }}</p>
+                                <a href="{{ res.lien }}" target="_blank" class="btn" style="background: #16a085; padding: 6px 12px; font-size: 0.85em;">🌐 Visiter la source</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- SECTION DROITE : Espace d'Entraide et Références partagées -->
+        <div>
+            <!-- Formulaire de partage -->
+            <div class="card">
+                <h2>🤝 Partager une ressource</h2>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="text" name="titre" placeholder="Titre de la ressource (ex: Livre d'Algèbre)" class="form-control" required>
+                    <textarea name="description_ou_lien" placeholder="Lien vers le site ou description détaillée de la découverte..." rows="4" class="form-control" required></textarea>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">Publier pour ma classe</button>
+                </form>
+            </div>
+
+            <!-- Fil d'actualité de la classe -->
+            <div class="card">
+                <h2>📢 Flux d'entraide de votre promotion</h2>
+                {% if references_filiere %}
+                    {% for ref in references_filiere %}
+                        <div class="reference-item">
+                            <strong style="color: #2c3e50;">{{ ref.titre }}</strong>
+                            <p style="margin: 5px 0; font-size: 0.95em; color: #444;">{{ ref.description_ou_lien|urlize }}</p>
+                            <div class="meta-text">
+                                Partagé par : {{ ref.etudiant.get_full_name|default:ref.etudiant.username }} <br>
+                                Le {{ ref.date_publication|date:"d M Y à H:i" }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: #7f8c8d; text-align: center; font-size: 0.9em;">Aucune référence partagée pour le moment. Soyez le premier !</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

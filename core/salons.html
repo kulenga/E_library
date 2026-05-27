@@ -1,0 +1,152 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Salons d'Étude & Travaux Dirigés{% endblock %}
+
+{% block content %}
+<!-- Système d'alertes pour les retours d'actions (Création, Invitations) -->
+{% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+            <div class="p-4 rounded-xl border text-sm font-medium shadow-sm flex items-center justify-between
+                {% if message.tags == 'success' %} bg-emerald-50 border-emerald-200 text-emerald-800
+                {% elif message.tags == 'error' %} bg-rose-50 border-rose-200 text-rose-800
+                {% else %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}">
+                <span>{{ message }}</span>
+                <button type="button" onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 font-bold ml-4">&times;</button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Colonne Principale : Vos Salons d'Étude Actifs -->
+    <div class="lg:col-span-2 space-y-6">
+
+        <!-- En-tête et Bouton de Création Rapide -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <h1 class="text-xl font-bold text-gray-900">Vos groupes et salons de discussion</h1>
+                <p class="text-sm text-gray-500">Collaborez sur vos projets académiques, devoirs de session et révisions.</p>
+            </div>
+
+            <form method="POST" class="w-full sm:w-auto flex items-center gap-2">
+                {% csrf_token %}
+                <input type="text" name="nom_salon" required placeholder="Nom du nouveau groupe..."
+                       class="w-full sm:w-64 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
+                <button type="submit" name="creer_salon" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shrink-0 shadow-sm">
+                    Créer
+                </button>
+            </form>
+        </div>
+
+        <!-- Liste des Salons Rattachés -->
+        <div class="space-y-4">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-400">Salons rejoints ou créés</h2>
+            {% if mes_salons %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for salon in mes_salons %}
+                        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between h-44 hover:border-gray-300 transition-all">
+                            <div>
+                                <div class="flex items-start justify-between gap-2">
+                                    <h3 class="font-bold text-base text-gray-900 truncate" title="{{ salon.nom }}">{{ salon.nom }}</h3>
+                                    {% if salon.createur == user %}
+                                        <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-semibold uppercase tracking-wide shrink-0">Gestionnaire</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1 truncate">Créé par : {{ salon.createur.username }}</p>
+                                <p class="text-xs text-gray-500 mt-3 font-medium">Membres actifs : <span class="text-gray-800 bg-gray-100 px-1.5 py-0.5 rounded text-xs font-semibold">{{ salon.membres.all|length }}</span></p>
+                            </div>
+
+                            <!-- Zone d'action du Salon -->
+                            <div class="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                                <a href="#" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors shrink-0">Ouvrir le chat &rarr;</a>
+
+                                {% if salon.createur == user %}
+                                    <form method="POST" action="{% url 'envoyer_invitation' salon.id %}" class="flex items-center gap-1">
+                                        {% csrf_token %}
+                                        <select name="invite_id" required class="bg-gray-50 border border-gray-300 rounded text-[11px] p-1 focus:border-indigo-500 focus:outline-none max-w-[120px] transition-all">
+                                            <option value="" disabled selected>Inviter...</option>
+                                            {% for camarade in camarades %}
+                                                <option value="{{ camarade.id }}">{{ camarade.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="bg-gray-900 hover:bg-black text-white text-[11px] px-2.5 py-1 rounded font-medium transition-colors" title="Envoyer l'invitation">+</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400">
+                    Vous ne faites encore partie d'aucun salon d'étude. Créez-en un ou attendez une invitation.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Colonne Droite : Invitations reçues & Gestion des camarades -->
+    <div class="space-y-6">
+
+        <!-- Boîte de réception des Invitations -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <h2 class="text-sm font-bold text-gray-900 mb-3 flex items-center justify-between">
+                <span>Invitations en attente</span>
+                <span class="bg-amber-100 text-amber-800 font-mono text-xs px-2 py-0.5 rounded-full font-bold">{{ invitations_recues.count }}</span>
+            </h2>
+
+            {% if invitations_recues %}
+                <div class="space-y-3">
+                    {% for invitation in invitations_recues %}
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2">
+                            <p class="text-xs text-gray-600 leading-relaxed">
+                                <strong class="text-gray-900">{{ invitation.hote.username }}</strong> vous invite à rejoindre le salon <strong class="text-gray-900">"{{ invitation.salon.nom }}"</strong>.
+                            </p>
+
+                            <div class="flex gap-2 pt-1">
+                                <form method="POST" action="{% url 'repondre_invitation' invitation.id 'accepter' %}" class="inline-block">
+                                    {% csrf_token %}
+                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold px-3 py-1.5 rounded shadow-sm transition-colors">
+                                        Accepter
+                                    </button>
+                                </form>
+                                <form method="POST" action="{% url 'repondre_invitation' invitation.id 'refuser' %}" class="inline-block">
+                                    {% csrf_token %}
+                                    <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-[11px] font-semibold px-3 py-1.5 rounded transition-colors">
+                                        Décliner
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-xs text-gray-400 text-center py-6 italic">Aucune nouvelle invitation reçue.</p>
+            {% endif %}
+        </div>
+
+        <!-- Annuaire de Classe simplifié -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <div class="mb-3">
+                <h2 class="text-sm font-bold text-gray-900">Vos camarades de promotion</h2>
+                <p class="text-xs text-gray-400">Étudiants inscrits dans votre filière.</p>
+            </div>
+
+            <div class="divide-y divide-gray-100 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                {% for camarade in camarades %}
+                    <div class="py-2.5 flex items-center justify-between gap-4 text-xs">
+                        <span class="font-medium text-gray-700 truncate" title="{{ camarade.username }}">{{ camarade.username }}</span>
+                        <span class="text-gray-400 font-sans italic truncate max-w-[120px]" title="{% if camarade.first_name %}{{ camarade.first_name }} {{ camarade.last_name }}{% endif %}">
+                            {% if camarade.first_name %}{{ camarade.first_name }} {{ camarade.last_name|slice:":1" }}.{% else %}Étudiant{% endif %}
+                        </span>
+                    </div>
+                {% empty %}
+                    <p class="text-xs text-gray-400 py-4 text-center italic">Aucun autre étudiant inscrit dans votre filière.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
